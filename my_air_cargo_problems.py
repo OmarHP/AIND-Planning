@@ -151,9 +151,9 @@ class AirCargoProblem(Problem):
         new_state = FluentState([], [])
         old_state = decode_state(state, self.state_map)
         # Get the positive fluents
-        new_state.pos = list(set(old_state.pos) + set(action.effect_add) - set(action.effect_rem))
+        new_state.pos = list(set(old_state.pos).union(action.effect_add) - set(action.effect_rem))
         # Get the negative fluents
-        new_state.neg = list(set(old_state.neg) + set(action.effect_rem) - set(action.effect_add))
+        new_state.neg = list(set(old_state.neg).union(action.effect_rem) - set(action.effect_add))
         return encode_state(new_state, self.state_map)
 
     def goal_test(self, state: str) -> bool:
