@@ -127,17 +127,14 @@ class AirCargoProblem(Problem):
         """
         # TODO implement
         possible_actions = []
-        kb = PropKB()
-        kb.tell(decode_state(state, self.state_map).pos_sentence())
+        # Decode the given state representation
+        current_state = decode_state(state, self.state_map)
+        # Iterate through all the actions
         for action in self.actions_list:
-            is_possible = True
-            for clause in action.precond_pos:
-                if clause not in kb.clauses:
-                    is_possible = False
-            for clause in action.precond_neg:
-                if clause in kb.clauses:
-                    is_possible = False
-            if is_possible:
+            meet_precond_pos = set(action.precond_pos).issubset(current_state.pos)
+            meet_precond_neg = set(action.precond_neg).issubset(current_state.neg)
+            # If current state entails the action's preconditions, the acction is possible
+            if meet_precond_pos and meet_precond_neg:
                 possible_actions.append(action)
         return possible_actions
 
@@ -153,18 +150,10 @@ class AirCargoProblem(Problem):
         # TODO implement
         new_state = FluentState([], [])
         old_state = decode_state(state, self.state_map)
-        for fluent in old_state.pos:
-            if fluent not in action.effect_rem:
-                new_state.pos.append(fluent)
-        for fluent in action.effect_add:
-            if fluent not in new_state.pos:
-                new_state.pos.append(fluent)
-        for fluent in old_state.neg:
-            if fluent not in action.effect_add:
-                new_state.neg.append(fluent)
-        for fluent in action.effect_rem:
-            if fluent not in new_state.neg:
-                new_state.neg.append(fluent)
+        # Get the positive fluents
+        new_state.pos = list(set(old_state.pos) + set(action.effect_add) - set(action.effect_rem))
+        # Get the negative fluents
+        new_state.neg = list(set(old_state.neg) + set(action.effect_rem) - set(action.effect_add))
         return encode_state(new_state, self.state_map)
 
     def goal_test(self, state: str) -> bool:
